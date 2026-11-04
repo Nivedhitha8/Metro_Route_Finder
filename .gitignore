@@ -1,0 +1,4 @@
+metro
+metro.exe
+tests/node_modules
+tests/package-lock.json

@@ -1,0 +1,19 @@
+# Optional extra data. Anything missing stays "Not available" on the website. Nothing is guessed.
+# Fields are separated by "|". Use "?" for a value you do not know. Restart the program after editing.
+#
+# 1) Walking and transfer time at an interchange station (needed for "Less Walking" in metres,
+#    and for waiting/interchange time in the journey estimate):
+#      interchange | Station name | walking metres | transfer minutes
+#    Example (NOT real data, replace with measured/official values):
+#      interchange | Arignar Anna Alandur | 120 | 4
+#
+# 2) Time between trains on a line (average wait = half of this):
+#      headway | Line name | minutes
+#    Example (NOT real data):
+#      headway | Blue | 6
+#
+# 3) Closed station (disruption hook: routes are planned around it):
+#      closed | Station name
+#
+# The journey estimate "in train + interchange + waiting" is only shown when
+# every interchange and every line used has these values.

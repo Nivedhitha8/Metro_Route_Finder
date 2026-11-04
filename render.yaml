@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: metro-route-finder
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health

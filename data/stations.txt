@@ -1,0 +1,53 @@
+# Metro network. Format: "Station,minutes to the NEXT station on that line"
+# Optional third number = km to the next station:  "Station,minutes,km"   (leave it out if unknown)
+# A station that appears under two lines becomes an interchange automatically.
+# Times are approximate sample values: edit freely, then restart the program.
+# Shown on the website next to every time estimate. Change it if you load official timings:
+#times_source Approximate sample values from this file, not an official timetable
+
+#line Blue
+Wimco Nagar Depot,2
+Wimco Nagar,2
+Thiruvottriyur,2
+Thiruvottriyur Theradi,2
+Kaladipet,2
+Tollgate,2
+New Washermanpet,2
+Tondiarpet,2
+Thiagaraya College,2
+Washermanpet,2
+Mannadi,2
+High Court,2
+Puratchi Thalaivar Dr. M.G. Ramachandran Central,2
+Government Estate,2
+LIC,2
+Thousand Lights,2
+AG-DMS,2
+Teynampet,2
+Nandanam,2
+Saidapet,3
+Little Mount,2
+Guindy,3
+Arignar Anna Alandur,3
+Nanganallur Road,2
+Meenambakkam,2
+Chennai International Airport,0
+
+#line Green
+Puratchi Thalaivar Dr. M.G. Ramachandran Central,2
+Egmore,2
+Nehru Park,2
+Kilpauk,2
+Pachaiyappa's College,2
+Shenoy Nagar,2
+Anna Nagar East,2
+Anna Nagar Tower,2
+Thirumangalam,2
+Koyambedu,3
+CMBT,2
+Arumbakkam,2
+Vadapalani,3
+Ashok Nagar,2
+Ekkattuthangal,2
+Arignar Anna Alandur,3
+St. Thomas Mount,0

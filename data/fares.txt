@@ -1,0 +1,17 @@
+# Fare rules. FARES ARE HIDDEN UNTIL THIS FILE IS MARKED VERIFIED. No fare is ever guessed.
+#
+# STATUS: no verified rules are loaded. When this project was upgraded, the official CMRL fare
+# table could not be checked, and public web pages disagreed (some say fares depend on distance
+# in km, others on number of stations; the top fare is quoted as Rs 50 or Rs 60). So nothing is
+# filled in here. To switch fares on:
+#   1. Open the current fare table on https://chennaimetrorail.org and copy its rules.
+#   2. Set "basis" to what the table uses: stops (stations travelled) or km.
+#      (km needs the optional third number in data/stations.txt for every segment.)
+#   3. Add one "slab" line per band:  slab | up to this many stops (or km) | fare in rupees
+#      Bands must go upwards. Format example (made-up numbers, do not copy):  slab | 5 | 10
+#   4. Write where you got it in "source" and change "verified" to yes.
+# Restart the program. Fares then update automatically for every route and priority.
+#
+basis    | stops
+source   | (not set)
+verified | no

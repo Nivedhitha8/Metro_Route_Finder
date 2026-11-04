@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3f5f8">
+<title>Metro Route Finder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23121826'/%3E%3Crect x='9' y='7' width='14' height='14' rx='4' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M9 15h14M12 26l2-5M20 26l-2-5' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+/* ===== Colours live in variables, so a theme is just a different set of values ===== */
+:root{
+  --bg1:#f7f8fb;--bg2:#edf0f5;--glow:rgba(140,160,205,.30);--glow2:rgba(255,255,255,.95);
+  --ink:#121826;--soft:#3b4456;--muted:#667085;--hair:rgba(18,24,38,.10);
+  --card:rgba(255,255,255,.72);--card-bd:rgba(255,255,255,.9);--panel:#ffffff;--field:#ffffff;--hover:#f1f3f7;--chip:rgba(18,24,38,.06);
+  --accent:#3d5a99;--focus:rgba(61,90,153,.45);--btn:#121826;--btn-hover:#252e45;--btn-ink:#ffffff;--err:#a3321f;--ok:#1f7a55;
+  --shadow:0 24px 48px -28px rgba(30,42,70,.28);--pop:0 24px 48px -12px rgba(30,42,70,.35);
+  --l-blue:#3f64ad;--l-green:#2f8a62;--l-red:#c0392b;--l-yellow:#b8860b;--l-purple:#7a5cb0;--l-orange:#c96a12;--l-pink:#b8457a;--l-other:#6b7589;
+  --node-fill:#ffffff;--node-ring:#121826;--halo:rgba(61,90,153,.20);--start:#1f9d6a;--end:#c0392b;--label-halo:#ffffff;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg1:#0e1320;--bg2:#090c14;--glow:rgba(70,100,170,.28);--glow2:rgba(40,55,90,.35);
+  --ink:#e9edf6;--soft:#c3cadb;--muted:#9aa5ba;--hair:rgba(233,237,246,.14);
+  --card:rgba(24,31,47,.80);--card-bd:rgba(255,255,255,.07);--panel:#141b2a;--field:#141b2a;--hover:#1d263a;--chip:rgba(233,237,246,.09);
+  --accent:#8fb0ff;--focus:rgba(143,176,255,.55);--btn:#e9edf6;--btn-hover:#ffffff;--btn-ink:#0e1320;--err:#ff9f8c;--ok:#5fd0a0;
+  --shadow:0 24px 48px -28px rgba(0,0,0,.7);--pop:0 24px 48px -12px rgba(0,0,0,.8);
+  --l-blue:#7ea2ec;--l-green:#58c79b;--l-red:#ff8a7a;--l-yellow:#e6c04a;--l-purple:#b39ae8;--l-orange:#f2a04e;--l-pink:#ef86b4;--l-other:#a3adc0;
+  --node-fill:#141b2a;--node-ring:#e9edf6;--halo:rgba(143,176,255,.26);--start:#4fd39b;--end:#ff8a7a;--label-halo:#141b2a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{min-height:100%;background:var(--bg2)}
+body{margin:0;min-height:100vh;min-height:100dvh;color:var(--ink);-webkit-font-smoothing:antialiased;
+  font:16px/1.55 Inter,"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  background:radial-gradient(900px 520px at 85% -12%,var(--glow),transparent 62%),radial-gradient(700px 480px at -8% 8%,var(--glow2),transparent 60%),linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 100%);
+  background-attachment:fixed}
+.wrap{max-width:1000px;margin:0 auto;padding:max(22px,env(safe-area-inset-top)) 20px 64px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:.92rem;letter-spacing:.01em;color:var(--soft)}
+.mark{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--btn);color:var(--btn-ink)}
+.theme{display:inline-flex;align-items:center;gap:8px;padding:8px 14px 8px 10px;border-radius:999px;border:1px solid var(--hair);background:var(--card);color:var(--soft);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.theme:hover{background:var(--hover)}
+.theme svg{width:18px;height:18px}
+.theme .moon{display:block}.theme .sun{display:none}
+:root[data-theme="dark"] .theme .moon{display:none}:root[data-theme="dark"] .theme .sun{display:block}
+header.hero{padding:38px 0 24px}
+h1{margin:0 0 10px;font:400 clamp(2.3rem,7vw,3.3rem)/1.05 var(--serif);letter-spacing:-.025em}
+header.hero p{margin:0;color:var(--muted);max-width:60ch}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--card-bd);border-radius:24px;padding:12px;box-shadow:0 0 0 1px var(--hair),var(--shadow);
+  -webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2)}
+.card h2{margin:0 0 4px;font-size:.72rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.card .sub{margin:0 0 14px;color:var(--muted);font-size:.88rem}
+.panel{margin-top:16px;padding:22px 22px 20px;animation:in .35s ease both}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.panel{animation:none}*{scroll-behavior:auto!important;transition:none!important}}
+
+/* ----- search form ----- */
+#f{position:relative;z-index:10}
+.legs{position:relative;background:var(--field);border-radius:18px;box-shadow:0 0 0 1px var(--hair);transition:box-shadow .2s}
+.legs:focus-within{box-shadow:0 0 0 1px var(--focus),0 0 0 4px var(--halo)}
+.leg{position:relative;display:flex;gap:16px;align-items:center;padding:12px 64px 12px 18px}
+.leg+.leg{border-top:1px solid var(--hair)}
+.pin{flex:none;width:12px;height:12px;border-radius:50%;border:2px solid var(--ink);background:var(--field)}
+.leg+.leg .pin{border-radius:3px;background:var(--ink)}
+.legs::before{content:"";position:absolute;left:23px;top:36px;bottom:36px;border-left:2px dotted var(--hair)}
+.leg>div{flex:1;min-width:0}
+label.t{display:block;font-size:.68rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+input[type=text]{width:100%;padding:2px 0 0;border:0;background:transparent;color:var(--ink);font:inherit;font-size:1.05rem;font-weight:500;text-overflow:ellipsis}
+input[type=text]::placeholder{color:var(--muted);opacity:.8;font-weight:400}
+input[type=text]:focus{outline:0}
+.swap{position:absolute;right:14px;top:50%;transform:translateY(-50%);z-index:2;width:38px;height:38px;border-radius:50%;border:1px solid var(--hair);background:var(--field);color:var(--soft);font-size:1rem;cursor:pointer;transition:background .15s,transform .25s}
+.swap:hover{background:var(--hover)}.swap:active{transform:translateY(-50%) rotate(180deg)}
+.dd{position:absolute;left:-1px;right:-1px;top:calc(100% + 8px);z-index:30;max-height:264px;overflow-y:auto;margin:0;padding:6px;list-style:none;background:var(--panel);border-radius:16px;box-shadow:0 0 0 1px var(--hair),var(--pop);overscroll-behavior:contain}
+.dd[hidden]{display:none}
+.dd li{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:10px 12px;border-radius:10px;cursor:pointer;word-break:break-word;font-size:.97rem}
+.dd li small{color:var(--muted);font-size:.74rem;white-space:nowrap}
+.dd li.act{background:var(--hover)}.dd li.cur{font-weight:700}
+.dd .none{color:var(--muted);cursor:default}
+fieldset.prio{border:0;margin:0;padding:14px 4px 2px}
+fieldset.prio legend{padding:0 0 8px;font-size:.68rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips input{position:absolute;opacity:0;pointer-events:none}
+.chips label{padding:8px 15px;border-radius:999px;font-size:.88rem;font-weight:600;color:var(--soft);background:var(--chip);border:1px solid transparent;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
+.chips label:hover{background:var(--hover)}
+.chips input:checked+label{background:var(--btn);color:var(--btn-ink)}
+.chips input:focus-visible+label{outline:3px solid var(--focus);outline-offset:2px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:14px 4px 4px}
+.example{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-size:.88rem;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.go{margin-left:auto;display:inline-flex;gap:8px;align-items:center;padding:13px 24px;border:0;border-radius:999px;background:var(--btn);color:var(--btn-ink);font:inherit;font-size:.95rem;font-weight:600;cursor:pointer;transition:transform .15s,opacity .15s,background .15s}
+.go:hover{background:var(--btn-hover);transform:translateY(-1px)}.go:disabled{opacity:.55;cursor:wait;transform:none}
+.err{margin:16px 4px 0;padding:12px 16px;border-radius:14px;background:var(--panel);color:var(--err);box-shadow:0 0 0 1px var(--err)}
+
+/* ----- recommendation ----- */
+.rec-head{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:0 0 6px}
+.trip{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 14px;font:400 1.4rem/1.25 var(--serif);letter-spacing:-.01em}
+.trip i{font-style:normal;color:var(--muted);font-family:inherit}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:999px;background:var(--btn);color:var(--btn-ink);font-size:.74rem;font-weight:700;letter-spacing:.02em}
+.pill.soft{background:var(--chip);color:var(--soft)}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);margin:0 0 6px;border-block:1px solid var(--hair)}
+.sum div{padding:14px 0 12px 16px}.sum div:first-child{padding-left:0}
+.sum div+div{border-left:1px solid var(--hair)}
+.sum b{display:block;font-size:1.85rem;font-weight:600;line-height:1.1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.sum b small{font-size:.88rem;font-weight:500;color:var(--muted);margin-left:3px;letter-spacing:0}
+.sum span{font-size:.7rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.na{color:var(--muted);font-weight:500}
+.sum b.na{font-size:1.1rem;padding-top:.45rem;letter-spacing:0}
+.facts{margin:8px 0 14px;color:var(--soft);font-size:.9rem}
+.why{margin:0 0 10px;color:var(--soft)}
+.why strong{color:var(--ink)}
+ul.tips{margin:8px 0 0;padding-left:1.2em;color:var(--soft);font-size:.92rem}
+ul.tips li{margin:4px 0}
+.notes{margin:16px 0 0;padding:12px 14px;border-radius:14px;background:var(--chip);color:var(--soft);font-size:.84rem}
+.notes b{color:var(--ink)}
+.notes ul{margin:6px 0 0;padding-left:1.2em}
+
+/* ----- dropdown cards (same look as "How the routes are found") ----- */
+.dropcard{padding:16px 20px}
+.dropcard details,details.subdrop{margin:0;color:var(--soft);font-size:1rem}
+.dropcard summary,details.subdrop summary{cursor:pointer;font-weight:600;color:var(--soft)}
+.dropcard summary{font-size:1rem;padding:2px 0}
+.dropcard details[open]>summary{margin-bottom:10px}
+details.subdrop{margin:14px 0 0;font-size:.9rem}
+details.subdrop ul{margin:8px 0 0;padding-left:1.2em;color:var(--soft)}
+.dropcard .sub{margin:0 0 10px}
+/* ----- the three options ----- */
+.same{margin:0 0 12px;padding:10px 14px;border-radius:14px;background:var(--chip);color:var(--soft);font-size:.92rem}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.opt{display:block;width:100%;text-align:left;padding:14px 16px;border-radius:16px;border:1px solid var(--hair);background:var(--panel);color:var(--ink);font:inherit;cursor:pointer}
+.opt:hover{background:var(--hover)}.opt[aria-pressed=true]{box-shadow:0 0 0 2px var(--accent)}
+.opt h3{margin:0 0 8px;font-size:.95rem;font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.opt dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0;font-size:.9rem}
+.opt dt{color:var(--muted)}.opt dd{margin:0;font-variant-numeric:tabular-nums;text-align:right}
+
+/* ----- comparison table ----- */
+.tscroll{overflow-x:auto;margin:0 -4px}
+table.cmp{width:100%;border-collapse:collapse;font-size:.92rem;min-width:520px}
+table.cmp th{padding:8px 10px;text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--hair);white-space:nowrap}
+table.cmp td{padding:11px 10px;border-bottom:1px solid var(--hair);vertical-align:top;font-variant-numeric:tabular-nums}
+table.cmp tr.sel td{background:var(--chip)}
+table.cmp tr:last-child td{border-bottom:0}
+.rbtn{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:none;border:0;padding:0;color:var(--ink);font:inherit;font-weight:700;cursor:pointer;text-align:left}
+.badge{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 6px;border-radius:8px;background:var(--btn);color:var(--btn-ink);font-size:.82rem;font-weight:800}
+.tag2{display:inline-block;margin:3px 4px 0 0;padding:1px 8px;border-radius:999px;background:var(--chip);color:var(--soft);font-size:.7rem;font-weight:600}
+.tag2.rc{background:var(--btn);color:var(--btn-ink)}
+
+/* ----- directions ----- */
+.seg{margin:0 0 4px}
+.seghead{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:0 0 8px;font-size:.92rem;color:var(--soft)}
+.linebadge{display:inline-flex;align-items:center;gap:7px;padding:3px 11px 3px 9px;border-radius:999px;background:var(--panel);box-shadow:0 0 0 1px var(--hair);color:var(--ink);font-size:.78rem;font-weight:700}
+.linebadge::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c)}
+ol.route{list-style:none;margin:0 0 6px;padding:0}
+.stop{position:relative;padding:0 0 12px 34px;min-height:30px}
+.stop::before{content:"";position:absolute;left:10px;top:17px;bottom:-5px;width:3px;border-radius:2px;background:var(--c)}
+.stop:last-child::before{display:none}
+.stop::after{content:"";position:absolute;left:5px;top:5px;width:13px;height:13px;border-radius:50%;background:var(--panel);border:2.5px solid var(--c)}
+.stop.end::after{background:var(--c);box-shadow:0 0 0 3px var(--panel),0 0 0 4.5px var(--c)}
+.stop:last-child{padding-bottom:2px}
+.nm{padding-top:1px;word-break:break-word;color:var(--soft)}
+.stop.end .nm{color:var(--ink);font-weight:600;font-size:1.02rem}
+.xchg{margin:6px 0 14px;padding:12px 14px;border-radius:14px;background:var(--chip);color:var(--soft);font-size:.92rem;border-left:4px solid var(--accent)}
+.xchg b{color:var(--ink)}
+.xchg small{display:block;margin-top:4px;color:var(--muted)}
+details{margin:18px 4px 0;color:var(--muted);font-size:.88rem}
+summary{cursor:pointer;font-weight:600;color:var(--soft)}
+details p,details li{max-width:70ch}
+.hint{margin:14px 4px 0;color:var(--muted);font-size:.88rem}
+#result.stale{opacity:.45;transition:opacity .2s}
+
+@media (max-width:700px){
+  .wrap{padding-left:14px;padding-right:14px}header.hero{padding-top:28px}
+  .card{border-radius:20px;padding:10px}.panel{padding:18px 16px}
+  .leg{padding-right:58px}
+  .actions{flex-direction:column;align-items:stretch}.go{margin-left:0;justify-content:center}.example{text-align:left}
+  .sum div{padding-left:10px}.sum div:first-child{padding-left:0}.sum b{font-size:1.45rem}
+  .trip{font-size:1.2rem}
+  .theme span{display:none}.theme{padding:8px 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top">
+  <div class="brand"><span class="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="14" rx="4"/><path d="M5 11h14M9 21l2-4M15 21l-2-4"/></svg></span>Metro Route Finder</div>
+  <button type="button" class="theme" id="theme" aria-pressed="false" aria-label="Switch to dark theme">
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    <span id="theme-label">Dark mode</span>
+  </button>
+</div>
+<header class="hero">
+  <h1>Choose where to go?</h1>
+  <p>Find the smartest way across the city. Faster routes, fewer stops and seamless metro travel.</p>
+</header>
+<main>
+  <form class="card" id="f" autocomplete="off">
+    <div class="legs">
+      <div class="leg fld"><span class="pin"></span><div><label class="t" for="from">From</label><input type="text" id="from" placeholder="Search or choose a station" required role="combobox" aria-autocomplete="list" aria-expanded="false"></div><ul class="dd" id="dd-from" role="listbox" hidden></ul></div>
+      <div class="leg fld"><span class="pin"></span><div><label class="t" for="to">To</label><input type="text" id="to" placeholder="Search or choose a station" required role="combobox" aria-autocomplete="list" aria-expanded="false"></div><ul class="dd" id="dd-to" role="listbox" hidden></ul></div>
+      <button type="button" class="swap" id="swap" aria-label="Swap stations">&#8645;</button>
+    </div>
+    <fieldset class="prio">
+      <legend>Priority</legend>
+      <div class="chips">
+        <input type="radio" name="prio" id="p-fastest" value="fastest" checked><label for="p-fastest" title="Lowest travel time">Fastest</label>
+        <input type="radio" name="prio" id="p-transfers" value="transfers"><label for="p-transfers" title="Fewest line changes">Fewest Interchanges</label>
+        <input type="radio" name="prio" id="p-shortest" value="shortest"><label for="p-shortest" title="Fewest stops">Shortest</label>
+      </div>
+    </fieldset>
+    <div class="actions">
+      <button type="button" class="example" id="example"></button>
+      <button class="go" id="go" type="submit">Find route <span aria-hidden="true">&rarr;</span></button>
+    </div>
+  </form>
+  <p class="hint" id="stalehint" hidden>You changed a station. Press <b>Find route</b> to update the results.</p>
+  <div id="result" aria-live="polite"></div>
+  <details>
+    <summary>How the routes are found</summary>
+    <ul>
+      <li><b>Network model:</b> stations are vertices; each track between two neighbouring stations is an edge with its minutes. A station on two lines is an interchange.</li>
+      <li><b>Fastest and Fewest Interchanges:</b> Dijkstra's algorithm with a binary min-heap. Each priority compares time, stops, transfers and walking in a different order, so ties are broken in a sensible way.</li>
+      <li><b>Shortest</b> means the fewest stops (or the least distance, once real distances are added to the data file).</li>
+      <li><b>Alternatives:</b> a depth-first search lists every real route that visits no station twice; very slow ones are hidden.</li>
+      <li><b>Not available</b> means the data was not provided. Nothing is guessed.</li>
+    </ul>
+  </details>
+</main>
+</div>
+<script>
+/* ===== Small helpers ===== */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const NAMED={blue:'--l-blue',green:'--l-green',red:'--l-red',yellow:'--l-yellow',purple:'--l-purple',orange:'--l-orange',pink:'--l-pink'};
+const col=l=>'var('+(NAMED[String(l).toLowerCase()]||'--l-other')+')';   /* a CSS variable, so themes recolour it */
+const plural=(n,w)=>n+' '+w+(n==1?'':'s');
+const fmtMin=m=>m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min';
+const PRIO={all:'All Routes',fastest:'Fastest',cheapest:'Cheapest',transfers:'Fewest Interchanges',walking:'Less Walking',shortest:'Shortest'};
+
+/* ===== State: what the page currently shows ===== */
+let ST=[], NET=null;        /* stations and network from the server */
+let DATA=null, SEL=0;       /* last route result, and which route is selected */
+let REQ=0;                  /* counts requests so an old answer never overwrites a newer one */
+const OPEN={opt:false,cmp:false,notes:false};   /* which dropdowns are open (kept when the page redraws) */
+const prio=()=>document.querySelector('input[name=prio]:checked').value;
+const stationInfo=name=>ST.find(s=>s.name===name);
+
+/* ===== Theme (light is the default; the choice is remembered) ===== */
+function setTheme(t,save){
+  document.documentElement.dataset.theme=t;
+  const dark=t==='dark';
+  $('theme').setAttribute('aria-pressed',dark);
+  $('theme').setAttribute('aria-label',dark?'Switch to light theme':'Switch to dark theme');
+  $('theme-label').textContent=dark?'Light mode':'Dark mode';
+  document.querySelector('meta[name=theme-color]').content=dark?'#0e1320':'#f3f5f8';
+  if(save){try{localStorage.setItem('metro-theme',t)}catch(e){}}
+}
+let saved=null;try{saved=localStorage.getItem('metro-theme')}catch(e){}
+setTheme(saved==='dark'?'dark':'light',false);
+$('theme').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark',true);
+/* Only colours change: nothing is re-fetched or re-drawn, so every selection stays as it was. */
+
+/* ===== Load the network ===== */
+Promise.all([fetch('/api/stations').then(r=>r.json()),fetch('/api/network').then(r=>r.json())])
+  .then(([s,n])=>{ST=s;NET=n}).catch(()=>{$('result').innerHTML='<p class="err" role="alert">Cannot reach the server.</p>'});
+
+/* ===== Station search box (autocomplete) ===== */
+function combo(id){
+  const inp=$(id),dd=$('dd-'+id);let act=-1,items=[];
+  const same=s=>s.name.toLowerCase()==inp.value.trim().toLowerCase();
+  const render=q=>{
+    q=(q||'').trim().toLowerCase();
+    items=ST.filter(s=>!q||s.name.toLowerCase().includes(q));
+    dd.innerHTML=items.length?items.map((s,i)=>'<li role="option" data-i="'+i+'"'+(same(s)?' class="cur"':'')+'><span>'+esc(s.name)+'</span><small>'+esc(s.lines.join(' / '))+'</small></li>').join(''):'<li class="none">No matching station</li>';
+    act=items.findIndex(same);mark();
+  };
+  const mark=()=>{dd.querySelectorAll('li').forEach((li,i)=>li.classList.toggle('act',i==act));const a=dd.querySelector('.act');if(a)a.scrollIntoView({block:'nearest'})};
+  const open=all=>{render(all?'':inp.value);dd.hidden=false;inp.setAttribute('aria-expanded','true');const a=dd.querySelector('.act');if(a)dd.scrollTop=Math.max(0,a.offsetTop-dd.clientHeight/2)};
+  const close=()=>{dd.hidden=true;inp.setAttribute('aria-expanded','false')};
+  const pick=i=>{if(items[i]){inp.value=items[i].name;close();syncStale()}else close()};   /* choosing a station does NOT search */
+  inp.addEventListener('focus',()=>{inp.select();open(true)});
+  inp.addEventListener('click',()=>{if(dd.hidden){inp.select();open(true)}});
+  inp.addEventListener('input',()=>open(false));
+  inp.addEventListener('blur',close);
+  dd.addEventListener('mousedown',e=>{e.preventDefault();const li=e.target.closest('li[data-i]');if(li)pick(+li.dataset.i)});
+  inp.addEventListener('keydown',e=>{
+    if(e.key=='ArrowDown'||e.key=='ArrowUp'){e.preventDefault();if(dd.hidden)open(true);if(items.length){act=(act+(e.key=='ArrowDown'?1:-1)+items.length)%items.length;mark()}}
+    else if(e.key=='Enter'&&!dd.hidden&&act>=0){e.preventDefault();pick(act)}
+    else if(e.key=='Escape')close();
+  });
+}
+combo('from');combo('to');
+$('swap').onclick=()=>{const a=$('from').value;$('from').value=$('to').value;$('to').value=a;syncStale()};
+$('example').onclick=()=>{$('from').value='Wimco Nagar Depot';$('to').value='St. Thomas Mount';search()};
+
+/* ===== Searching ===== */
+/* A search runs only when you press "Find route" (or press Enter, or "Try an example").
+ * If you change a station after a search, the old result is greyed out with a reminder. */
+function syncStale(){
+  const stale=!!DATA&&($('from').value.trim().toLowerCase()!==DATA.from.toLowerCase()||$('to').value.trim().toLowerCase()!==DATA.to.toLowerCase());
+  $('result').classList.toggle('stale',stale);$('stalehint').hidden=!stale;
+}
+$('from').addEventListener('input',syncStale);$('to').addEventListener('input',syncStale);
+$('f').onsubmit=e=>{e.preventDefault();search()};
+async function search(){
+  const id=++REQ;
+  const url='/api/route?from='+encodeURIComponent($('from').value.trim())+'&to='+encodeURIComponent($('to').value.trim())+'&priority=all';
+  $('go').disabled=true;
+  let d;
+  try{d=await (await fetch(url)).json()}catch(x){d={ok:false,error:'Cannot reach the server.'}}
+  if(id!==REQ)return;             /* a newer search was started: ignore this old answer */
+  $('go').disabled=false;
+  if(!d.ok){DATA=null;$('result').innerHTML='<p class="err" role="alert">'+esc(d.error)+'</p>';syncStale();return}
+  DATA=d;SEL=d.best[prio()];
+  render();syncStale();
+  $('result').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+document.querySelectorAll('input[name=prio]').forEach(r=>r.addEventListener('change',()=>{
+  if(!DATA)return;
+  SEL=DATA.best[prio()];render();      /* priorities need no new request: the server already sent every option */
+}));
+
+/* ===== Text helpers: how one route differs from another ===== */
+function diffText(a,b){               /* b compared with a */
+  const dm=b.minutes-a.minutes,ds=b.stops-a.stops,dt=b.interchanges-a.interchanges,p=[];
+  p.push(dm==0?'same in-train time':fmtMin(Math.abs(dm))+(dm>0?' longer':' shorter'));
+  p.push(ds==0?'same number of stops':plural(Math.abs(ds),'stop')+(ds>0?' more':' fewer'));
+  p.push(dt==0?'same number of interchanges':plural(Math.abs(dt),'interchange')+(dt>0?' more':' fewer'));
+  return p.join(', ');
+}
+const MAINP=['fastest','transfers','shortest'];
+/* A plain name for each route: the options it wins ("Fastest", "Fewest Interchanges"...), else "Alternative 1", "Alternative 2"... */
+function routeNames(d){
+  let alt=0;
+  return d.routes.map(r=>{const t=r.best_for.filter(k=>MAINP.includes(k)).map(k=>PRIO[k]);return t.length?t.join(' · '):'Alternative '+(++alt)});
+}
+function explain(d,p){
+  const R=d.routes,B=d.best,rec=R[B[p]],F=R[B.fastest],T=R[B.transfers],N=routeNames(d);
+  let head;
+  if(p==='fastest')head='This is the fastest route: <strong>'+fmtMin(rec.minutes)+'</strong> in the train (estimated from the data file).';
+  else if(p==='transfers')head='This route needs the fewest interchanges: <strong>'+rec.interchanges+'</strong>.';
+  else head='This is the shortest route: <strong>'+(NET.data.distance_complete?'the least distance':plural(rec.stops,'stop'))+'</strong>.';
+  const tips=[];
+  if(R.length===1)tips.push('Only one real route exists between these stations in the loaded network.');
+  else{
+    if(B.fastest===B.transfers)tips.push('<strong>Fastest vs Fewest Interchanges:</strong> the fastest route also has the fewest interchanges, so there is no trade-off between them.');
+    else if(F.interchanges===T.interchanges)tips.push('<strong>Fastest vs Fewest Interchanges:</strong> both need '+plural(F.interchanges,'interchange')+'; the fewest-interchanges route is '+diffText(F,T)+'.');
+    else tips.push('<strong>Fastest vs Fewest Interchanges:</strong> the fastest takes '+fmtMin(F.minutes)+' with '+plural(F.interchanges,'interchange')+'. Fewest Interchanges saves '+plural(F.interchanges-T.interchanges,'interchange')+' but is '+fmtMin(T.minutes-F.minutes)+' longer.');
+    R.forEach((r,i)=>{if(r!==rec&&tips.length<4)tips.push('<strong>'+esc(N[i])+'</strong> compared with this route: '+diffText(rec,r)+'.')});
+  }
+  return {head,tips};
+}
+/* "About the numbers" is a dropdown inside the result card */
+function dataNotes(){
+  const D=NET.data,n=[];
+  n.push('Travel times: '+esc(D.times_source)+'. They are estimates of in-train time.');
+  if(!D.waiting_complete)n.push('Waiting and interchange time are not available (no verified train-frequency or transfer-time data), so they are not added.');
+  return '<details class="subdrop" data-key="notes"><summary>About the numbers</summary><ul>'+n.map(x=>'<li>'+x+'</li>').join('')+'</ul></details>';
+}
+
+/* ===== Rendering ===== */
+const NA=(why)=>'<span class="na" title="'+esc(why)+'">Not available</span>';
+const totalCell=r=>r.total_est!==null?fmtMin(r.total_est):NA('Needs train frequency and interchange times');
+const drop=(key,title,body)=>'<section class="card panel dropcard"><details data-key="'+key+'"'+'><summary>'+title+'</summary>'+body+'</details></section>';
+
+function render(){
+  const d=DATA,p=prio(),R=d.routes,rec=R[d.best[p]],sel=R[SEL],ex=explain(d,p),N=routeNames(d);
+  const hasTotal=R.some(r=>r.total_est!==null);
+  const tagsFor=r=>r.best_for.filter(k=>MAINP.includes(k)).map(k=>'<span class="tag2'+(k===p?' rc':'')+'">'+esc(PRIO[k])+'</span>').join('');
+  /* 1. the answer for the chosen priority */
+  const recBody=
+    '<p class="trip"><span>'+esc(d.from)+'</span><i>&rarr;</i><span>'+esc(d.to)+'</span></p>'+
+    '<div class="rec-head"><span class="pill">Recommended</span>'+tagsFor(rec)+'</div>'+
+    '<div class="sum"><div><b>'+fmtMin(rec.minutes).replace(/ min$/,'<small>min</small>')+'</b><span>Travel time (est.)</span></div>'+
+    '<div><b>'+rec.stops+'</b><span>Stops</span></div>'+
+    '<div><b>'+rec.interchanges+'</b><span>Interchange'+(rec.interchanges==1?'':'s')+'</span></div></div>'+
+    '<p class="why">'+ex.head+'</p>'+
+    (ex.tips.length?'<ul class="tips">'+ex.tips.map(t=>'<li>'+t+'</li>').join('')+'</ul>':'')+
+    dataNotes();
+
+const recCard=drop(
+    'rec',
+    'Recommended Route · '+PRIO[p],
+    recBody
+);
+  /* 2. dropdown: Fastest, Fewest Interchanges and Shortest side by side */
+  const optCard=drop('opt','Fastest, Fewest Interchanges and Shortest',threeOptions(d));
+  
+  /* 4. dropdown: every route compared */
+  const cmpCard=drop('cmp','Compare all routes ('+R.length+')','<p class="sub">Select a route to see its directions'+'.</p><div class="tscroll"><table class="cmp"><caption class="sr" style="position:absolute;left:-9999px">Comparison of routes</caption><thead><tr><th scope="col">Route</th><th scope="col">Travel time (est.)</th><th scope="col">Stops</th><th scope="col">Interchanges</th>'+(hasTotal?'<th scope="col">Journey incl. wait</th>':'')+'</tr></thead><tbody>'+
+    R.map((r,i)=>'<tr class="'+(i===SEL?'sel':'')+'"><td><button type="button" class="rbtn" data-i="'+i+'" aria-pressed="'+(i===SEL)+'">'+esc(N[i])+'</button></td><td>'+fmtMin(r.minutes)+'</td><td>'+r.stops+'</td><td>'+r.interchanges+'</td>'+(hasTotal?'<td>'+totalCell(r)+'</td>':'')+'</tr>').join('')+'</tbody></table></div>');
+  /* 5. directions for the selected route */
+  const dirCard='<section class="card panel" aria-labelledby="h-dir"><h2 id="h-dir">Directions</h2><p class="sub">'+esc(N[SEL])+' · station by station, with interchange instructions.</p>'+directions(sel)+'</section>';
+  $('result').innerHTML=dirCard+recCard+optCard+cmpCard;
+  document.querySelectorAll('.rbtn,.opt').forEach(b=>b.onclick=()=>{SEL=+b.dataset.i;render()});
+  document.querySelectorAll('details[data-key]').forEach(md=>{          /* keep dropdowns open/closed across redraws */
+    md.open=!!OPEN[md.dataset.key];
+    md.addEventListener('toggle',()=>{OPEN[md.dataset.key]=md.open;});
+  });
+  
+}
+
+/* Fastest, Fewest Interchanges and Shortest side by side. If they are the same route, say so. */
+function threeOptions(d){
+  const R=d.routes,B=d.best,groups=new Map();
+  [['fastest','Fastest'],['transfers','Fewest Interchanges'],['shortest','Shortest']].forEach(([k,l])=>{
+    if(!groups.has(B[k]))groups.set(B[k],[]);groups.get(B[k]).push(l)});
+  const defn=NET.data.distance_complete?'Shortest = least distance.':'Shortest = fewest stops.';
+  const card=([i,labels])=>{const r=R[i];return '<button type="button" class="opt" data-i="'+i+'" aria-pressed="'+(i===SEL)+'"><h3>'+esc(labels.join(' · '))+'</h3><dl>'+
+    '<dt>Travel time (est.)</dt><dd>'+fmtMin(r.minutes)+'</dd><dt>Stops</dt><dd>'+r.stops+'</dd><dt>Interchanges</dt><dd>'+r.interchanges+'</dd></dl></button>'};
+  const note=groups.size===1?'<p class="same"><b>All three options are the same route:</b> it is the fastest, has the fewest interchanges and is the shortest. '+defn+'</p>'
+    :'<p class="same">'+(groups.size===2?'Two of the three options share a route; the other differs.':'The three options are different routes.')+' '+defn+'</p>';
+  return note+'<div class="opts">'+[...groups.entries()].map(card).join('')+'</div>';
+}
+
+/* Directions: one block per stretch on the same line, with an interchange note between stretches. */
+function directions(r){
+  let h='',k=0;
+  r.segments.forEach((sg,i)=>{
+    const stops=[];                                   /* stations of this stretch, in order */
+    for(let j=0;j<sg.stops+1;j++)stops.push(r.path[k+j]);
+    const first=i===0,last=i===r.segments.length-1;
+    if(!first){
+      const prev=r.segments[i-1],ic=r.path[k].station;
+      const info=NET.interchanges.find(x=>x.station===ic)||{};
+      h+='<div class="xchg"><b>Change at '+esc(ic)+'</b><br>Leave the '+esc(prev.line)+' line and walk to the <b>'+esc(sg.line)+'</b> line platform for trains toward <b>'+esc(sg.toward)+'</b>.'+
+         (info.walk_m!=null||info.minutes!=null?'<small>'+[info.walk_m!=null?'Walking: '+info.walk_m+' m':'',info.minutes!=null?'Transfer time: '+info.minutes+' min':''].filter(Boolean).join(' · ')+'</small>':'')+'</div>';
+    }
+    h+='<div class="seg"><div class="seghead"><span class="linebadge" style="--c:'+col(sg.line)+'">'+esc(sg.line)+' line</span><span>'+(first?'Board at <b>'+esc(sg.from)+'</b>, ':'')+'toward <b>'+esc(sg.toward)+'</b> · '+plural(sg.stops,'stop')+' · '+fmtMin(sg.minutes)+' (est.)</span></div><ol class="route">';
+    stops.forEach((s,j)=>{
+      if(!first&&j===0)return;                         /* the interchange station is shown in the note above */
+      const isEnd=(first&&j===0)||(last&&j===stops.length-1);
+      h+='<li class="stop'+(isEnd?' end':'')+'" style="--c:'+col(sg.line)+'"><div class="nm">'+esc(s.station)+(first&&j===0?' <span class="na">· start</span>':'')+(last&&j===stops.length-1?' <span class="na">· exit here</span>':'')+'</div></li>';
+    });
+    h+='</ol></div>';
+    k+=sg.stops;
+  });
+  return h;
+}
+
+</script>
+</body>
+</html>
